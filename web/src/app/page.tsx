@@ -597,7 +597,19 @@ export default function HomePage() {
             <span>Open-Source under MIT License</span>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-6">
+            <a
+              href="/privacy"
+              className="hover:text-zinc-950 transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href="mailto:ptable@coldestwins.com"
+              className="hover:text-zinc-950 transition-colors"
+            >
+              ptable@coldestwins.com
+            </a>
             <a
               href="https://x.com/UFO2002616/status/2122321834331005104"
               target="_blank"
