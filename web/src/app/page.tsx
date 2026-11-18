@@ -141,13 +141,22 @@ export default function HomePage() {
       {/* HERO SECTION */}
       <section className="relative pt-36 pb-24 sm:pt-44 sm:pb-32 px-6">
         <div className="mx-auto max-w-4xl text-center">
-          <Badge
-            variant="outline"
-            className="mb-8 border-zinc-300 bg-white px-4 py-1.5 text-xs font-medium text-zinc-800 shadow-2xs"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-zinc-950" />
-            <span>100% Open Source · MIT License · Chrome Extension MV3</span>
-          </Badge>
+          <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
+            <Badge
+              variant="outline"
+              className="border-zinc-300 bg-white px-4 py-1.5 text-xs font-medium text-zinc-800 shadow-2xs"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-zinc-950" />
+              <span>100% Open Source · MIT License · Chrome Extension MV3</span>
+            </Badge>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#ddd5c5] bg-[#f1ece1] pl-1.5 pr-3.5 py-1 text-xs font-mono tracking-tight text-zinc-900 shadow-2xs">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#ff5b1f] text-[11px] font-sans font-bold text-white leading-none">
+                Y
+              </span>
+              <span>not backed by yc yet</span>
+            </div>
+          </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-[-0.04em] text-zinc-950 leading-[1.06]">
             Periodic Table
