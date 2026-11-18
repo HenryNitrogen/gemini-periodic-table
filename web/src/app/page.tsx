@@ -605,6 +605,12 @@ export default function HomePage() {
               Privacy Policy
             </a>
             <a
+              href="/support"
+              className="hover:text-zinc-950 transition-colors"
+            >
+              Support
+            </a>
+            <a
               href="mailto:ptable@coldestwins.com"
               className="hover:text-zinc-950 transition-colors"
             >
