@@ -1,0 +1,627 @@
+/* Shared styles for Gemini 4 — Model Periodic Table */
+.gpt-popover-root,
+.gpt-popover-root * {
+  box-sizing: border-box;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.gpt-selector-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.gpt-selector-pill:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.gpt-selector-pill.is-open {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.gpt-pill-dot-hollow {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid #8b92a1;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.gpt-pill-chevron {
+  width: 14px;
+  height: 14px;
+  color: #9ca3af;
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.gpt-selector-pill.is-open .gpt-pill-chevron {
+  transform: rotate(180deg);
+}
+
+/* Popover Card */
+.gpt-popover-card {
+  position: relative;
+  width: 680px;
+  max-width: calc(100vw - 24px);
+  background: rgba(24, 26, 32, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 16px 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  color: #f3f4f6;
+  z-index: 999999;
+  overflow: visible;
+  animation: gptFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes gptFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.gpt-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.gpt-popover-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #e5e7eb;
+  letter-spacing: -0.01em;
+}
+
+.gpt-close-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.gpt-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f9fafb;
+}
+
+/* Column Numbers 1-18 */
+.gpt-col-labels {
+  display: grid;
+  grid-template-columns: repeat(18, minmax(0, 1fr));
+  gap: 3.5px;
+  margin-bottom: 4px;
+}
+
+.gpt-col-label {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.28);
+  user-select: none;
+}
+
+/* Periodic Table Grid */
+.gpt-grid-wrapper {
+  position: relative;
+  overflow: visible;
+}
+
+.gpt-detail-slot {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 60;
+}
+
+.gpt-grid {
+  display: grid;
+  grid-template-columns: repeat(18, minmax(0, 1fr));
+  grid-template-rows: repeat(7, 29px) 7px repeat(2, 29px);
+  gap: 3px;
+}
+
+/* Center Gemini 4 Title & Legend */
+.gpt-center-hero {
+  grid-column: 3 / 13;
+  grid-row: 1 / 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  padding-bottom: 6px;
+}
+
+.gpt-hero-brand {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f3f4f6;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.gpt-hero-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.gpt-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.gpt-dot-released {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4b9eff;
+  box-shadow: 0 0 8px rgba(75, 158, 255, 0.85);
+}
+
+.gpt-dot-soon {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid #6b7280;
+}
+
+/* Element Tiles */
+.gpt-tile {
+  position: relative;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #22252d;
+  color: #788090;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease, background 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+  user-select: none;
+}
+
+.gpt-tile:hover {
+  background: #2c303a;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #d1d5db;
+  transform: translateY(-1px);
+  z-index: 3;
+}
+
+.gpt-tile.is-selected {
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.45);
+}
+
+.gpt-tile-num {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 7.5px;
+  line-height: 1;
+  opacity: 0.72;
+  font-weight: 500;
+}
+
+.gpt-tile-sym {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+  margin-top: 5px;
+  letter-spacing: -0.02em;
+}
+
+/* Released Accents */
+.gpt-tile.accent-blue {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: rgba(96, 165, 250, 0.65);
+  color: #93c5fd;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.18);
+}
+
+.gpt-tile.accent-blue:hover,
+.gpt-tile.accent-blue.is-selected {
+  background: rgba(59, 130, 246, 0.34);
+  border-color: #60a5fa;
+  color: #dbeafe;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.38);
+}
+
+.gpt-tile.accent-purple {
+  background: rgba(168, 85, 247, 0.22);
+  border-color: rgba(192, 132, 252, 0.65);
+  color: #d8b4fe;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.18);
+}
+
+.gpt-tile.accent-purple:hover,
+.gpt-tile.accent-purple.is-selected {
+  background: rgba(168, 85, 247, 0.34);
+  border-color: #c084fc;
+  color: #f3e8ff;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.38);
+}
+
+.gpt-tile.accent-teal {
+  background: rgba(20, 184, 166, 0.22);
+  border-color: rgba(52, 211, 153, 0.65);
+  color: #6ee7b7;
+  box-shadow: 0 0 12px rgba(20, 184, 166, 0.18);
+}
+
+.gpt-tile.accent-teal:hover,
+.gpt-tile.accent-teal.is-selected {
+  background: rgba(20, 184, 166, 0.34);
+  border-color: #34d399;
+  color: #d1fae5;
+  box-shadow: 0 0 16px rgba(20, 184, 166, 0.38);
+}
+
+/* Footer: Other models */
+.gpt-popover-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gpt-footer-label {
+  font-size: 11.5px;
+  color: #9ca3af;
+  margin-right: 2px;
+}
+
+.gpt-other-btn {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #d1d5db;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.gpt-other-btn:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #ffffff;
+}
+
+.gpt-other-btn.is-selected {
+  background: rgba(96, 165, 250, 0.2);
+  border-color: rgba(96, 165, 250, 0.6);
+  color: #dbeafe;
+}
+
+/* Floating Detail / Tooltip Card + Hover Bridge */
+.gpt-detail-card-bridge {
+  position: absolute;
+  z-index: 60;
+  padding: 6px 8px 10px 8px;
+  pointer-events: auto;
+}
+
+.gpt-detail-card-bridge.is-below {
+  padding: 10px 8px 6px 8px;
+}
+
+.gpt-detail-card-bridge.is-soon {
+  pointer-events: none;
+  padding: 0;
+}
+
+.gpt-detail-card {
+  position: relative;
+  background: rgba(28, 31, 38, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 11px 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  min-width: 218px;
+  pointer-events: auto;
+  animation: gptCardPop 0.13s ease-out;
+}
+
+.gpt-detail-card.is-soon {
+  min-width: 170px;
+  padding: 8px 10px;
+  pointer-events: none;
+}
+
+@keyframes gptCardPop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.gpt-detail-card.accent-blue {
+  border-color: rgba(96, 165, 250, 0.45);
+}
+
+.gpt-detail-card.accent-purple {
+  border-color: rgba(192, 132, 252, 0.45);
+}
+
+.gpt-detail-card.accent-teal {
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+.gpt-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gpt-card-badge {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #272a33;
+  color: #9ca3af;
+}
+
+.gpt-card-badge .num {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  font-size: 8px;
+  line-height: 1;
+  opacity: 0.78;
+}
+
+.gpt-card-badge .sym {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.gpt-detail-card.accent-blue .gpt-card-badge {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: rgba(96, 165, 250, 0.65);
+  color: #bfdbfe;
+}
+
+.gpt-detail-card.accent-purple .gpt-card-badge {
+  background: rgba(168, 85, 247, 0.22);
+  border-color: rgba(192, 132, 252, 0.65);
+  color: #e9d5ff;
+}
+
+.gpt-detail-card.accent-teal .gpt-card-badge {
+  background: rgba(20, 184, 166, 0.22);
+  border-color: rgba(52, 211, 153, 0.65);
+  color: #a7f3d0;
+}
+
+.gpt-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gpt-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f9fafb;
+  line-height: 1.2;
+}
+
+.gpt-card-subtitle {
+  font-size: 11.5px;
+  color: #9ca3af;
+  line-height: 1.2;
+}
+
+.gpt-card-soon-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Thinking Level Segmented Control */
+.gpt-thinking-section {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gpt-thinking-label {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.gpt-thinking-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.28);
+  padding: 3px;
+  border-radius: 8px;
+}
+
+.gpt-thinking-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 5px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.gpt-thinking-btn:hover {
+  color: #e5e7eb;
+}
+
+.gpt-thinking-btn.is-locked {
+  color: #6b7280;
+  opacity: 0.72;
+}
+
+.gpt-thinking-btn.is-locked:hover {
+  color: #fbbf24;
+}
+
+.gpt-detail-card.accent-blue .gpt-thinking-btn.is-active {
+  background: rgba(59, 130, 246, 0.28);
+  color: #dbeafe;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.5) inset;
+}
+
+.gpt-detail-card.accent-purple .gpt-thinking-btn.is-active {
+  background: rgba(168, 85, 247, 0.28);
+  color: #f3e8ff;
+  box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.5) inset;
+}
+
+.gpt-detail-card.accent-teal .gpt-thinking-btn.is-active {
+  background: rgba(20, 184, 166, 0.28);
+  color: #d1fae5;
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.5) inset;
+}
+
+/* Locked / Unavailable Model Badge */
+.gpt-tile.is-locked::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  opacity: 0.85;
+}
+
+.gpt-locked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.gpt-card-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Anchored Popover Host on gemini.google.com */
+.gpt-gemini-popover-host {
+  position: fixed;
+  z-index: 2147483645;
+  pointer-events: auto;
+}
+
+.gpt-gemini-status-toast {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 2147483646;
+  background: rgba(24, 26, 32, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.gpt-gemini-status-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Hide native Gemini <gem-popover> / <gem-menu> overlay while automating real model/thinking switches */
+html.gpt-automating-menu gem-popover,
+html.gpt-automating-menu .cdk-overlay-popover,
+html.gpt-automating-menu .popover-menu,
+html.gpt-automating-menu .popover-click-shield,
+html.gpt-automating-menu .submenu-container,
+html.gpt-automating-menu gem-menu,
+html.gpt-automating-menu .cdk-overlay-container,
+html.gpt-automating-menu .mat-mdc-menu-panel,
+html.gpt-automating-menu [role="menu"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+

@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Periodic Table for Gemini",
+  "version": "1.0.0",
+  "description": "Replaces the Gemini model picker with an interactive 118-element Periodic Table selector with real-time model & thinking switching.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://gemini.google.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Periodic Table for Gemini",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "css": ["periodic-table.css"],
+      "js": ["elements-data.js", "periodic-table.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
