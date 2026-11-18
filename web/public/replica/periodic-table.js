@@ -7,6 +7,15 @@
 (function (global) {
   const { ELEMENTS, OTHER_MODELS } = global.GEMINI_PERIODIC_DATA;
 
+  function escapeHtml(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   const SPARKLE_SVG = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <defs>
@@ -568,19 +577,19 @@
         card.innerHTML = `
           <div class="gpt-card-head">
             <div class="gpt-card-badge">
-              <span class="num">${el.number}</span>
-              <span class="sym">${el.symbol}</span>
+              <span class="num">${escapeHtml(el.number)}</span>
+              <span class="sym">${escapeHtml(el.symbol)}</span>
             </div>
             <div class="gpt-card-meta">
               <div class="gpt-card-title-row">
-                <span class="gpt-card-title">${cardTitle}</span>
+                <span class="gpt-card-title">${escapeHtml(cardTitle)}</span>
                 ${
                   isLocked
                     ? `<span class="gpt-locked-badge">${LOCK_SVG}<span>Locked</span></span>`
                     : ""
                 }
               </div>
-              <div class="gpt-card-subtitle">${cardSubtitle}</div>
+              <div class="gpt-card-subtitle">${escapeHtml(cardSubtitle)}</div>
             </div>
           </div>
           <div class="gpt-thinking-section">
@@ -591,9 +600,9 @@
                   (opt) =>
                     `<button type="button" class="gpt-thinking-btn${
                       currentThinking === opt.key ? " is-active" : ""
-                    }${opt.locked ? " is-locked" : ""}" data-level="${opt.key}">${
+                    }${opt.locked ? " is-locked" : ""}" data-level="${escapeHtml(opt.key)}">${
                       opt.locked ? LOCK_SVG : ""
-                    }<span>${opt.label}</span></button>`
+                    }<span>${escapeHtml(opt.label)}</span></button>`
                 )
                 .join("")}
             </div>
@@ -627,11 +636,11 @@
         card.innerHTML = `
           <div class="gpt-card-head">
             <div class="gpt-card-badge">
-              <span class="num">${el.number}</span>
-              <span class="sym">${el.symbol}</span>
+              <span class="num">${escapeHtml(el.number)}</span>
+              <span class="sym">${escapeHtml(el.symbol)}</span>
             </div>
             <div class="gpt-card-meta">
-              <div class="gpt-card-title">${el.name}</div>
+              <div class="gpt-card-title">${escapeHtml(el.name)}</div>
               <div class="gpt-card-soon-label">Coming soon</div>
             </div>
           </div>

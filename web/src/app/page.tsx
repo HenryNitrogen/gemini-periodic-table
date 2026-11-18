@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Download,
   ArrowUpRight,
@@ -15,6 +16,7 @@ import {
   MonitorSmartphone,
 } from "lucide-react";
 import { FloatingNavbar } from "@/components/floating-navbar";
+import { SiteFooter } from "@/components/site-footer";
 import { PeriodicTablePlayground } from "@/components/periodic-table-playground";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,13 +45,13 @@ const SOURCE_FILES = [
   {
     path: "Extension/manifest.json",
     desc: "Chrome Extension Manifest V3 configuration & host permissions",
-    lines: "32 lines",
+    lines: "30 lines",
     href: `${REPO_URL}/blob/main/Extension/manifest.json`,
   },
   {
     path: "Extension/content.js",
     desc: "Live gemini.google.com DOM observer, responsive scaler & native menu driver",
-    lines: "560+ lines",
+    lines: "860+ lines",
     href: `${REPO_URL}/blob/main/Extension/content.js`,
   },
   {
@@ -61,7 +63,7 @@ const SOURCE_FILES = [
   {
     path: "Extension/elements-data.js",
     desc: "Complete 118 chemical elements coordinate matrix & Gemini 4 model mappings",
-    lines: "190+ lines",
+    lines: "190 lines",
     href: `${REPO_URL}/blob/main/Extension/elements-data.js`,
   },
   {
@@ -73,7 +75,7 @@ const SOURCE_FILES = [
   {
     path: "web/src/app/page.tsx",
     desc: "Next.js + Tailwind CSS + shadcn/ui open-source documentation & playground",
-    lines: "360+ lines",
+    lines: "600+ lines",
     href: `${REPO_URL}/blob/main/web/src/app/page.tsx`,
   },
 ];
@@ -111,10 +113,25 @@ export default function HomePage() {
 
   const cloneCmd = `git clone ${REPO_URL}.git`;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(cloneCmd);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(cloneCmd);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = cloneCmd;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
   };
 
   return (
@@ -269,9 +286,11 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-8 overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-950 shadow-lg">
-              <img
+              <Image
                 src={SHOWCASE_SLIDES[activeSlide].src}
                 alt={SHOWCASE_SLIDES[activeSlide].title}
+                width={1280}
+                height={800}
                 className="w-full h-auto object-cover"
               />
             </div>
@@ -583,61 +602,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* MINIMALIST FOOTER */}
-      <footer className="border-t border-zinc-200/90 bg-white py-12 px-6">
-        <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-zinc-500">
-          <div className="flex items-center gap-2.5">
-            <img
-              src="/logo.png"
-              alt="Periodic Table for Gemini"
-              className="h-6 w-6 rounded object-cover"
-            />
-            <span className="font-semibold text-zinc-950">
-              Periodic Table for Gemini
-            </span>
-            <span>·</span>
-            <span>Open-Source under MIT License</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6">
-            <a
-              href="/privacy"
-              className="hover:text-zinc-950 transition-colors"
-            >
-              Privacy Policy
-            </a>
-            <a
-              href="/support"
-              className="hover:text-zinc-950 transition-colors"
-            >
-              Support
-            </a>
-            <a
-              href="mailto:ptable@coldestwins.com"
-              className="hover:text-zinc-950 transition-colors"
-            >
-              ptable@coldestwins.com
-            </a>
-            <a
-              href="https://x.com/UFO2002616/status/2122321834331005104"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-zinc-950 transition-colors"
-            >
-              Concept by @UFO2002616
-            </a>
-            <a
-              href={REPO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-medium text-zinc-950 hover:underline underline-offset-4"
-            >
-              <GitHubMark className="h-3.5 w-3.5" />
-              <span>GitHub Repository</span>
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

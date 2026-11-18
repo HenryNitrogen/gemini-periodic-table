@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,34 +41,36 @@ export function FloatingNavbar() {
             : "mt-0 w-full max-w-none rounded-none border-b border-zinc-200/70 bg-white/95 px-6 sm:px-12 py-4 shadow-none backdrop-blur-md"
         )}
       >
-        <a
-          href="#"
+        <Link
+          href="/"
           className="flex items-center gap-2.5 text-zinc-950 font-semibold tracking-tight text-sm shrink-0 whitespace-nowrap"
         >
-          <img
+          <Image
             src="/logo.png"
             alt="Periodic Table for Gemini"
+            width={28}
+            height={28}
             className="h-7 w-7 rounded-md object-cover"
           />
           <span>Periodic Table for Gemini</span>
-        </a>
+        </Link>
 
         <nav className="hidden lg:flex items-center gap-5 text-xs font-medium text-zinc-500 whitespace-nowrap">
-          <a href="#demo" className="hover:text-zinc-950 transition-colors">
+          <Link href="/#demo" className="hover:text-zinc-950 transition-colors">
             Demo
-          </a>
-          <a href="#showcase" className="hover:text-zinc-950 transition-colors">
+          </Link>
+          <Link href="/#showcase" className="hover:text-zinc-950 transition-colors">
             Showcase
-          </a>
-          <a href="#features" className="hover:text-zinc-950 transition-colors">
+          </Link>
+          <Link href="/#features" className="hover:text-zinc-950 transition-colors">
             Architecture
-          </a>
-          <a href="#source" className="hover:text-zinc-950 transition-colors">
+          </Link>
+          <Link href="/#source" className="hover:text-zinc-950 transition-colors">
             Source Code
-          </a>
-          <a href="#install" className="hover:text-zinc-950 transition-colors">
+          </Link>
+          <Link href="/#install" className="hover:text-zinc-950 transition-colors">
             Install
-          </a>
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2">

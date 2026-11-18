@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Plus, Mic, ChevronDown, X, BookOpen, Rocket, Lightbulb } from "lucide-react";
 
 export interface ElementItem {
@@ -34,7 +34,7 @@ const RELEASED_MAP: Record<number, NonNullable<ElementItem["released"]>> = {
     title: "Gemini 4 Argon",
     subtitle: "Code and analysis",
     accent: "teal",
-    defaultThinking: "High",
+    defaultThinking: "Low",
   },
 };
 
@@ -180,13 +180,30 @@ export function PeriodicTablePlayground() {
   >({
     1: "Medium",
     6: "Low",
-    18: "High",
+    18: "Low",
   });
+  const [activeMode, setActiveMode] = useState<"Chat" | "Task">("Chat");
   const [promptText, setPromptText] = useState("");
   const [statusLog, setStatusLog] = useState(
-    "Active: Gemini 4 Argon · Thinking level: High"
+    "Active: Gemini 4 Argon · Thinking level: Low"
   );
   const hoverIntentRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const promptInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (hoverIntentRef.current) {
+        clearTimeout(hoverIntentRef.current);
+      }
+    };
+  }, []);
+
+  const clearHoverIntent = () => {
+    if (hoverIntentRef.current) {
+      clearTimeout(hoverIntentRef.current);
+      hoverIntentRef.current = null;
+    }
+  };
 
   const selectedElement =
     ELEMENTS.find((e) => e.number === selectedNumber) || ELEMENTS[0];
@@ -242,6 +259,24 @@ export function PeriodicTablePlayground() {
     if (el.released) {
       setStatusLog(`Switched to ${el.released.title} · Thinking level: ${level}`);
     }
+  };
+
+  const handlePromptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = promptText.trim();
+    if (!text) return;
+    if (!selectedOther && !selectedElement.released) {
+      setStatusLog(
+        `${selectedElement.name} is Coming soon — only 3 elements released in Gemini 4.`
+      );
+      return;
+    }
+    const thinking =
+      !selectedOther && selectedElement.released
+        ? ` (${thinkingLevels[selectedElement.number] || selectedElement.released.defaultThinking} thinking)`
+        : "";
+    setStatusLog(`[${activeMode}] Preview prompt to ${pillLabel}${thinking}: "${text}"`);
+    setPromptText("");
   };
 
   return (
@@ -309,15 +344,22 @@ export function PeriodicTablePlayground() {
           </h3>
 
           {/* Prompt Bar */}
-          <div className="flex w-full max-w-xl items-center gap-2.5 rounded-full border border-white/10 bg-[#181a20]/90 px-3.5 py-2 shadow-xl backdrop-blur-md">
+          <form
+            onSubmit={handlePromptSubmit}
+            className="flex w-full max-w-xl items-center gap-2.5 rounded-full border border-white/10 bg-[#181a20]/90 px-3.5 py-2 shadow-xl backdrop-blur-md"
+          >
             <button
               type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white"
+              onClick={() =>
+                setStatusLog("Preview mode — install the extension on gemini.google.com for file attachments.")
+              }
+              className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white cursor-pointer"
               aria-label="Add attachment"
             >
               <Plus className="h-4 w-4" />
             </button>
             <input
+              ref={promptInputRef}
               type="text"
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
@@ -341,12 +383,15 @@ export function PeriodicTablePlayground() {
             </button>
             <button
               type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white"
+              onClick={() =>
+                setStatusLog("Preview mode — install the extension on gemini.google.com for voice input.")
+              }
+              className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white cursor-pointer"
               aria-label="Voice input"
             >
               <Mic className="h-4 w-4" />
             </button>
-          </div>
+          </form>
 
           {/* Periodic Table Popover */}
           {isOpen ? (
@@ -468,7 +513,7 @@ export function PeriodicTablePlayground() {
               </div>
 
               {/* 18-Column Periodic Table Grid */}
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" onMouseLeave={clearHoverIntent}>
                 <div
                   className="grid min-w-[560px] gap-1"
                   style={{
@@ -527,6 +572,7 @@ export function PeriodicTablePlayground() {
                         type="button"
                         style={{ gridRow, gridColumn: el.col }}
                         onMouseEnter={() => handleTileHover(el)}
+                        onMouseLeave={clearHoverIntent}
                         onClick={() => handleTileClick(el)}
                         className={tileClasses}
                         title={`${el.number} ${el.name}`}
@@ -573,26 +619,52 @@ export function PeriodicTablePlayground() {
           ) : (
             <div className="mt-5 flex flex-col items-center">
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-white/10 px-3.5 py-1 text-xs font-medium text-white">
-                  Chat
-                </span>
-                <span className="px-3.5 py-1 text-xs font-medium text-zinc-500">
-                  Task
-                </span>
+                {(["Chat", "Task"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveMode(tab)}
+                    className={`rounded-full px-3.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                      activeMode === tab
+                        ? "bg-white/10 text-white"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
               </div>
               <div className="mt-6 flex flex-col gap-2 text-xs text-zinc-400">
-                <div className="flex items-center gap-2.5 px-3 py-1.5">
-                  <BookOpen className="h-3.5 w-3.5 text-zinc-500" />
-                  <span>What subject am I closest to mastering?</span>
-                </div>
-                <div className="flex items-center gap-2.5 px-3 py-1.5">
-                  <Rocket className="h-3.5 w-3.5 text-zinc-500" />
-                  <span>Test AI response speed</span>
-                </div>
-                <div className="flex items-center gap-2.5 px-3 py-1.5">
-                  <Lightbulb className="h-3.5 w-3.5 text-zinc-500" />
-                  <span>Reset my focus in 5 minutes</span>
-                </div>
+                {[
+                  {
+                    icon: BookOpen,
+                    text: "What subject am I closest to mastering?",
+                  },
+                  {
+                    icon: Rocket,
+                    text: "Test AI response speed",
+                  },
+                  {
+                    icon: Lightbulb,
+                    text: "Reset my focus in 5 minutes",
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.text}
+                      type="button"
+                      onClick={() => {
+                        setPromptText(item.text);
+                        promptInputRef.current?.focus();
+                      }}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-left hover:bg-white/5 hover:text-zinc-100 transition-colors cursor-pointer"
+                    >
+                      <Icon className="h-3.5 w-3.5 text-zinc-500" />
+                      <span>{item.text}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

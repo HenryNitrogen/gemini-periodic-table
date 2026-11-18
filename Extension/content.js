@@ -40,7 +40,7 @@
   let buttonObserver = null;
   let syncInterval = null;
   let automationQueue = Promise.resolve();
-  let lastKnownLocked = [6];
+  let lastKnownLocked = [];
   let lastKnownThinkingOptions = [
     { key: "Low", label: "Low", locked: false },
     { key: "Medium", label: "Medium", locked: false },
@@ -567,20 +567,27 @@
         await sleep(60);
       }
 
-      // 2. Switch Thinking level if requested on a released Gemini 4 model
+      // 2. Switch Thinking level if requested, or read real options/active level after model change
       let thinkingBlockedReason = null;
       let checkedThinkingFromMenu = null;
+      const switchedToReleasedModel =
+        targetModelKey !== null &&
+        targetModelKey !== initialBtnState.modelKey &&
+        (targetModelKey === 1 || targetModelKey === 6 || targetModelKey === 18);
 
       if (
-        targetThinkingLevel &&
-        (targetModelKey === 1 || targetModelKey === 6 || targetModelKey === 18)
+        (targetThinkingLevel &&
+          (targetModelKey === 1 || targetModelKey === 6 || targetModelKey === 18)) ||
+        switchedToReleasedModel
       ) {
         const refreshedBtn = findNativeModelButton();
         rootMenu = await openNativeMenu(refreshedBtn);
         if (rootMenu) {
           const rawThinkingItems = await openAndGetThinkingItems(rootMenu);
           if (rawThinkingItems.length === 0) {
-            thinkingBlockedReason = "Thinking level options unavailable";
+            if (targetThinkingLevel) {
+              thinkingBlockedReason = "Thinking level options unavailable";
+            }
           } else {
             const parsed = parseThinkingItems(rawThinkingItems);
             if (parsed.options.length > 0) {
@@ -588,22 +595,24 @@
             }
             checkedThinkingFromMenu = parsed.activeKey;
 
-            const subTarget = parsed.itemsByKey[targetThinkingLevel];
-            if (!subTarget) {
-              thinkingBlockedReason = `Thinking level ${targetThinkingLevel} not found`;
-            } else if (subTarget.locked) {
-              thinkingBlockedReason = `Thinking level ${targetThinkingLevel} is locked`;
-            } else {
-              subTarget.el.click();
-              await waitFor(
-                () =>
-                  !getRootGemMenu() ||
-                  parseActiveStateFromButton(findNativeModelButton()).thinkingLevel ===
-                    targetThinkingLevel,
-                600,
-                20
-              );
-              await sleep(50);
+            if (targetThinkingLevel) {
+              const subTarget = parsed.itemsByKey[targetThinkingLevel];
+              if (!subTarget) {
+                thinkingBlockedReason = `Thinking level ${targetThinkingLevel} not found`;
+              } else if (subTarget.locked) {
+                thinkingBlockedReason = `Thinking level ${targetThinkingLevel} is locked`;
+              } else {
+                subTarget.el.click();
+                await waitFor(
+                  () =>
+                    !getRootGemMenu() ||
+                    parseActiveStateFromButton(findNativeModelButton()).thinkingLevel ===
+                      targetThinkingLevel,
+                  600,
+                  20
+                );
+                await sleep(50);
+              }
             }
           }
         }
@@ -765,6 +774,35 @@
     }
   }
 
+  function handleGlobalKeydownCapture(e) {
+    if (!isEnabled || window.__gptInternalAutomation) return;
+    const isShortcut =
+      (e.metaKey || e.ctrlKey) &&
+      e.shiftKey &&
+      (e.key || "").toLowerCase() === "m";
+    const btn = findNativeModelButton();
+    if (!btn) return;
+
+    const switcher = btn.closest('[data-test-id="bard-mode-menu-button"]') || btn;
+    const focusedOnButton =
+      document.activeElement &&
+      (switcher.contains(document.activeElement) || btn.contains(document.activeElement));
+    const isActivateKey = focusedOnButton && (e.key === "Enter" || e.key === " ");
+
+    if (!isShortcut && !isActivateKey) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    initPeriodicTable();
+    periodicTable.toggle();
+    if (periodicTable.isOpen) {
+      positionPopoverHost();
+      requestAnimationFrame(() => positionPopoverHost());
+    }
+  }
+
   function handleWindowResize() {
     attachButtonObserver();
     if (periodicTable && periodicTable.isOpen) {
@@ -815,6 +853,7 @@
   }
 
   document.addEventListener("click", handleGlobalClickCapture, true);
+  document.addEventListener("keydown", handleGlobalKeydownCapture, true);
   window.addEventListener("resize", handleWindowResize);
 
   if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {

@@ -41,6 +41,13 @@
     });
   });
 
+  // Attachment & voice demo buttons
+  document.querySelectorAll(".icon-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      showToast("Preview mode — install the extension on gemini.google.com for attachments and voice.");
+    });
+  });
+
   // Submit prompt feedback
   promptForm.addEventListener("submit", (e) => {
     e.preventDefault();
