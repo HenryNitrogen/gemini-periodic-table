@@ -283,7 +283,9 @@
       btn.setAttribute("aria-expanded", String(this.isOpen));
       btn.innerHTML = `
         ${showHollowDot ? '<span class="gpt-pill-dot-hollow" aria-hidden="true"></span>' : ""}
-        <span class="gpt-pill-label">${summary.label}</span>
+        <span class="gpt-pill-label">${escapeHtml(summary.label)}${
+          summary.thinkingLevel ? ` <span style="opacity:0.65;font-weight:400;">· ${escapeHtml(summary.thinkingLevel)}</span>` : ""
+        }</span>
         ${CHEVRON_SVG}
       `;
       btn.addEventListener("click", (e) => {

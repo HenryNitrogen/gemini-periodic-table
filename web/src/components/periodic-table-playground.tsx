@@ -171,7 +171,8 @@ export const ELEMENTS: ElementItem[] = RAW_ELEMENTS.map(
 );
 
 export function PeriodicTablePlayground() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState<number>(18);
   const [selectedOther, setSelectedOther] = useState<string | null>(null);
   const [activeCardNumber, setActiveCardNumber] = useState<number | null>(18);
@@ -215,6 +216,11 @@ export function PeriodicTablePlayground() {
       ? "Flash-Lite"
       : "3.1 Pro"
     : selectedElement.name;
+  const pillThinking =
+    !selectedOther && selectedElement.released
+      ? thinkingLevels[selectedElement.number] ||
+        selectedElement.released.defaultThinking
+      : null;
   const isSelectedSoon = !selectedOther && !selectedElement.released;
 
   const handleTileHover = (el: ElementItem) => {
@@ -298,6 +304,7 @@ export function PeriodicTablePlayground() {
               type="button"
               onClick={() => {
                 setIsOpen(true);
+                setHasOpenedOnce(true);
                 const found = ELEMENTS.find((e) => e.number === preset.num);
                 if (found) handleTileClick(found);
               }}
@@ -366,21 +373,38 @@ export function PeriodicTablePlayground() {
               placeholder="Ask Gemini"
               className="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-500 outline-none"
             />
-            <button
-              type="button"
-              onClick={() => setIsOpen((v) => !v)}
-              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-3 text-xs font-medium text-zinc-100 hover:bg-white/15 cursor-pointer"
-            >
-              {isSelectedSoon && (
-                <span className="h-2 w-2 rounded-full border-[1.5px] border-zinc-400" />
+            <div className="relative">
+              {!isOpen && !hasOpenedOnce && (
+                <>
+                  <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-blue-400/70 animate-ping" />
+                  <div className="pointer-events-none absolute bottom-full right-0 mb-3 whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-[11px] font-medium text-zinc-950 shadow-lg">
+                    Click to open the Periodic Table
+                    <span className="absolute -bottom-1 right-6 h-2 w-2 rotate-45 bg-white" />
+                  </div>
+                </>
               )}
-              <span>{pillLabel}</span>
-              <ChevronDown
-                className={`h-3.5 w-3.5 text-zinc-400 transition-transform ${
-                  isOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen((v) => !v);
+                  setHasOpenedOnce(true);
+                }}
+                className="relative inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-3 text-xs font-medium text-zinc-100 hover:bg-white/15 cursor-pointer"
+              >
+                {isSelectedSoon && (
+                  <span className="h-2 w-2 rounded-full border-[1.5px] border-zinc-400" />
+                )}
+                <span>{pillLabel}</span>
+                {pillThinking && (
+                  <span className="text-zinc-400">{pillThinking}</span>
+                )}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-zinc-400 transition-transform ${
+                    isOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+            </div>
             <button
               type="button"
               onClick={() =>
