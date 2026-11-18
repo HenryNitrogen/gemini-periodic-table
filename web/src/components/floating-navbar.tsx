@@ -43,9 +43,11 @@ export function FloatingNavbar() {
           href="#"
           className="flex items-center gap-2.5 text-zinc-950 font-semibold tracking-tight text-sm shrink-0 whitespace-nowrap"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-zinc-950 text-white text-xs font-mono font-bold">
-            Pt
-          </span>
+          <img
+            src="/logo.png"
+            alt="Periodic Table for Gemini"
+            className="h-7 w-7 rounded-md object-cover"
+          />
           <span>Periodic Table for Gemini</span>
         </a>
 

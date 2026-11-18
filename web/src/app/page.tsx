@@ -587,9 +587,11 @@ export default function HomePage() {
       <footer className="border-t border-zinc-200/90 bg-white py-12 px-6">
         <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-zinc-500">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-6 w-6 items-center justify-center rounded bg-zinc-950 text-white font-mono text-[10px] font-bold">
-              Pt
-            </span>
+            <img
+              src="/logo.png"
+              alt="Periodic Table for Gemini"
+              className="h-6 w-6 rounded object-cover"
+            />
             <span className="font-semibold text-zinc-950">
               Periodic Table for Gemini
             </span>
