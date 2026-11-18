@@ -8,7 +8,7 @@
       number: 1,
       symbol: "H",
       name: "Hydrogen",
-      title: "Gemini 4 Hydrogen",
+      title: "Hydrogen",
       subtitle: "Everyday help",
       accent: "blue",
       defaultThinking: "Medium",
@@ -17,7 +17,7 @@
       number: 6,
       symbol: "C",
       name: "Carbon",
-      title: "Gemini 4 Carbon",
+      title: "Carbon",
       subtitle: "Most complex work",
       accent: "purple",
       defaultThinking: "Low",
@@ -26,7 +26,7 @@
       number: 18,
       symbol: "Ar",
       name: "Argon",
-      title: "Gemini 4 Argon",
+      title: "Argon",
       subtitle: "Code and analysis",
       accent: "teal",
       defaultThinking: "Low",
@@ -34,8 +34,8 @@
   };
 
   const OTHER_MODELS = [
-    { id: "flash-lite", name: "Flash-Lite", subtitle: "Fastest lightweight model" },
-    { id: "3.1-pro", name: "3.1 Pro", subtitle: "Legacy pro model" },
+    { id: "flash-lite", name: "Flash-Lite", subtitle: "Fast answers", supportsThinking: false },
+    { id: "3.1-pro", name: "3.1 Pro", subtitle: "Deep research", supportsThinking: true },
   ];
 
   // [atomicNumber, symbol, name, row, col]

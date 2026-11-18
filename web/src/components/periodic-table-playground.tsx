@@ -19,24 +19,29 @@ export interface ElementItem {
 
 const RELEASED_MAP: Record<number, NonNullable<ElementItem["released"]>> = {
   1: {
-    title: "Gemini 4 Hydrogen",
+    title: "Hydrogen",
     subtitle: "Everyday help",
     accent: "blue",
     defaultThinking: "Medium",
   },
   6: {
-    title: "Gemini 4 Carbon",
+    title: "Carbon",
     subtitle: "Most complex work",
     accent: "purple",
     defaultThinking: "Low",
   },
   18: {
-    title: "Gemini 4 Argon",
+    title: "Argon",
     subtitle: "Code and analysis",
     accent: "teal",
     defaultThinking: "Low",
   },
 };
+
+const OTHER_MODELS_LIST = [
+  { id: "flash-lite", name: "Flash-Lite", badge: "3.5", subtitle: "Fast answers" },
+  { id: "3.1-pro", name: "3.1 Pro", badge: "3.1", subtitle: "Deep research" },
+];
 
 const RAW_ELEMENTS: [number, string, string, number, number][] = [
   [1, "H", "Hydrogen", 1, 1],
@@ -176,6 +181,7 @@ export function PeriodicTablePlayground() {
   const [selectedNumber, setSelectedNumber] = useState<number>(18);
   const [selectedOther, setSelectedOther] = useState<string | null>(null);
   const [activeCardNumber, setActiveCardNumber] = useState<number | null>(18);
+  const [activeCardOtherId, setActiveCardOtherId] = useState<string | null>(null);
   const [thinkingLevels, setThinkingLevels] = useState<
     Record<number, "Low" | "Medium" | "High">
   >({
@@ -186,7 +192,7 @@ export function PeriodicTablePlayground() {
   const [activeMode, setActiveMode] = useState<"Chat" | "Task">("Chat");
   const [promptText, setPromptText] = useState("");
   const [statusLog, setStatusLog] = useState(
-    "Active: Gemini 4 Argon · Thinking level: Low"
+    "Active: Argon · Thinking level: Low"
   );
   const hoverIntentRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const promptInputRef = useRef<HTMLInputElement | null>(null);
@@ -210,11 +216,11 @@ export function PeriodicTablePlayground() {
     ELEMENTS.find((e) => e.number === selectedNumber) || ELEMENTS[0];
   const activeCardEl =
     ELEMENTS.find((e) => e.number === activeCardNumber) || null;
+  const activeCardOther =
+    OTHER_MODELS_LIST.find((m) => m.id === activeCardOtherId) || null;
 
   const pillLabel = selectedOther
-    ? selectedOther === "flash-lite"
-      ? "Flash-Lite"
-      : "3.1 Pro"
+    ? OTHER_MODELS_LIST.find((m) => m.id === selectedOther)?.name || "Flash-Lite"
     : selectedElement.name;
   const pillThinking =
     !selectedOther && selectedElement.released
@@ -232,9 +238,11 @@ export function PeriodicTablePlayground() {
       activeCardEl && activeCardEl.released && activeCardEl.number !== el.number;
     if (protectingReleased) {
       hoverIntentRef.current = setTimeout(() => {
+        setActiveCardOtherId(null);
         setActiveCardNumber(el.number);
       }, 180);
     } else {
+      setActiveCardOtherId(null);
       setActiveCardNumber(el.number);
     }
   };
@@ -245,6 +253,7 @@ export function PeriodicTablePlayground() {
       hoverIntentRef.current = null;
     }
     setSelectedOther(null);
+    setActiveCardOtherId(null);
     setSelectedNumber(el.number);
     setActiveCardNumber(el.number);
     if (el.released) {
@@ -260,6 +269,7 @@ export function PeriodicTablePlayground() {
     level: "Low" | "Medium" | "High"
   ) => {
     setSelectedOther(null);
+    setActiveCardOtherId(null);
     setSelectedNumber(el.number);
     setThinkingLevels((prev) => ({ ...prev, [el.number]: level }));
     if (el.released) {
@@ -273,7 +283,7 @@ export function PeriodicTablePlayground() {
     if (!text) return;
     if (!selectedOther && !selectedElement.released) {
       setStatusLog(
-        `${selectedElement.name} is Coming soon — only 3 elements released in Gemini 4.`
+        `${selectedElement.name} is Coming soon — not released yet.`
       );
       return;
     }
@@ -441,7 +451,26 @@ export function PeriodicTablePlayground() {
               </div>
 
               {/* Active Model Inspector Banner (mobile & desktop friendly) */}
-              {activeCardEl && (
+              {activeCardOther ? (
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-400/35 bg-blue-500/10 px-3.5 py-2.5 transition-all">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-400/50 bg-blue-500/20 text-xs font-bold text-blue-200">
+                      {activeCardOther.badge}
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-white">
+                        {activeCardOther.name}
+                      </div>
+                      <div className="text-[11px] text-zinc-400">
+                        {activeCardOther.subtitle}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-zinc-400">
+                    Thinking level: <span className="text-zinc-500">Not adjustable for this model</span>
+                  </div>
+                </div>
+              ) : activeCardEl && (
                 <div
                   className={`mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 transition-all ${
                     activeCardEl.released?.accent === "blue"
@@ -551,7 +580,7 @@ export function PeriodicTablePlayground() {
                     className="pointer-events-none flex flex-col items-center justify-center pb-1"
                   >
                     <div className="text-lg font-semibold tracking-tight text-white">
-                      Gemini 4
+                      Gemini
                     </div>
                     <div className="mt-1 flex items-center gap-3.5 text-[11px] text-zinc-400">
                       <span className="inline-flex items-center gap-1.5">
@@ -618,15 +647,19 @@ export function PeriodicTablePlayground() {
                 <span className="text-[11px] text-zinc-400 mr-1">
                   Other models
                 </span>
-                {[
-                  { id: "flash-lite", name: "Flash-Lite" },
-                  { id: "3.1-pro", name: "3.1 Pro" },
-                ].map((m) => (
+                {OTHER_MODELS_LIST.map((m) => (
                   <button
                     key={m.id}
                     type="button"
+                    onMouseEnter={() => {
+                      clearHoverIntent();
+                      setActiveCardOtherId(m.id);
+                    }}
                     onClick={() => {
+                      clearHoverIntent();
                       setSelectedOther(m.id);
+                      setActiveCardNumber(null);
+                      setActiveCardOtherId(m.id);
                       setStatusLog(`Switched to ${m.name}`);
                     }}
                     className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${

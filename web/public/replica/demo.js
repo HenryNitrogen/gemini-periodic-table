@@ -55,7 +55,7 @@
     if (!text) return;
     const summary = selector.getSelectionSummary();
     if (summary.type === "element" && !summary.released) {
-      showToast(`${summary.label} is Coming soon — only 3 elements released in Gemini 4.`);
+      showToast(`${summary.label} is Coming soon — not released yet.`);
       return;
     }
     const thinking = summary.thinkingLevel ? ` (${summary.thinkingLevel} thinking)` : "";

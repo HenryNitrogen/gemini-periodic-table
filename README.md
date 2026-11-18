@@ -6,7 +6,7 @@
 
 An open-source Chrome Extension (`Extension/`) and interactive showcase website (`web/`) that upgrades Google Gemini's (`gemini.google.com`) model selector into the viral **118-element Periodic Table** UI—with real-time model and Thinking Level (`Low` / `Medium` / `High`) switching.
 
-Inspired by the Gemini 4 UI concept by [`@UFO2002616`](https://x.com/UFO2002616/status/2122321834331005104).
+Inspired by the Model Periodic Table UI concept by [`@UFO2002616`](https://x.com/UFO2002616/status/2122321834331005104).
 
 ---
 
@@ -34,7 +34,7 @@ gemini-periodic-table/
 
 - **Real-Time Model Switching on `gemini.google.com`**:
   - Directly binds to Gemini's native model picker (`[data-test-id="bard-mode-menu-button"]`) across both desktop (`>= 960px` bottom prompt bar) and narrow/mobile (`<= 959px` top header) layouts.
-  - Switches live between **Gemini 4 Hydrogen** (`1 H`), **Gemini 4 Carbon** (`6 C`), **Gemini 4 Argon** (`18 Ar`), **3.5 Flash-Lite**, and **3.1 Pro**.
+  - Dynamically discovers every model from Gemini's live menu—lighting up any released element models (like **Hydrogen** `1 H`, **Carbon** `6 C`, **Argon** `18 Ar`, plus future elements) and listing non-element models in `Other models`.
 - **Real-Time Thinking Level Controls (`Low` / `Medium` / `High`)**:
   - Reads and switches Gemini's native Thinking Level submenu (`gem-menu-item[value="thinking_level"]`) on the fly.
 - **Zero-Misclick Hover Bridge & Intent Guard**:

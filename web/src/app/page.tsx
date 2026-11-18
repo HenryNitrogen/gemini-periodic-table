@@ -62,7 +62,7 @@ const SOURCE_FILES = [
   },
   {
     path: "Extension/elements-data.js",
-    desc: "Complete 118 chemical elements coordinate matrix & Gemini 4 model mappings",
+    desc: "Complete 118 chemical elements coordinate matrix & model mappings",
     lines: "190 lines",
     href: `${REPO_URL}/blob/main/Extension/elements-data.js`,
   },
@@ -84,15 +84,15 @@ const SHOWCASE_SLIDES = [
   {
     id: "argon",
     badge: "18 Ar · Released",
-    title: "Gemini 4 Argon — Code & Analysis",
+    title: "Argon — Code & Analysis",
     description:
-      "Selecting 18 Ar (Argon) switches your live Gemini session to 4 Argon and exposes real-time Thinking Level controls (Low, Medium, High).",
+      "Selecting 18 Ar (Argon) switches your live Gemini session to Argon and exposes real-time Thinking Level controls (Low, Medium, High).",
     src: "/screenshots/showcase-argon.png",
   },
   {
     id: "hydrogen",
     badge: "1 H · Released",
-    title: "Gemini 4 Hydrogen — Everyday Help",
+    title: "Hydrogen — Everyday Help",
     description:
       "Anchored directly to Gemini's prompt bar, 1 H (Hydrogen) provides fast everyday assistance with instant Low / Medium / High depth switching.",
     src: "/screenshots/showcase-hydrogen.png",
@@ -100,7 +100,7 @@ const SHOWCASE_SLIDES = [
   {
     id: "carbon",
     badge: "6 C · Released",
-    title: "Gemini 4 Carbon — Most Complex Work",
+    title: "Carbon — Most Complex Work",
     description:
       "Deep-reasoning model slot at Group 14, Period 2 (6 C) with violet accent styling and seamless Thinking Level configuration.",
     src: "/screenshots/showcase-carbon.png",

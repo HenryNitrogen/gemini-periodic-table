@@ -1,34 +1,26 @@
 /**
  * Content script for https://gemini.google.com/*
- * Built against Gemini's live DOM:
- * - Supports both >=960px (under-input bard-mode-switcher + nested popover="manual" submenu)
- *   and <=959px (top-header bard-mode-switcher + inline .expand-content accordion).
- * - Matches thinking level strictly by .label ("Low", "Medium", "High" / "低", "中", "高")
- *   so .sublabel never collides across options.
- * - Keeps all Periodic Table UI labels and toast notifications in clean English.
- * - Responsively scales and positions the Periodic Table so it never overlaps the prompt bar
- *   and never overflows the viewport at any window size.
+ * 100% Dynamic Model & Thinking-Level Discovery against Gemini's live DOM:
+ * - Reads all model entries directly from gem-menu[data-test-id="gem-mode-menu"]
+ *   and dynamically maps any of the 118 chemical elements (Hydrogen, Helium, Carbon,
+ *   Argon, or any future element Gemini releases) onto the Periodic Table, while
+ *   placing non-element models (Flash-Lite, 3.1 Pro, etc.) into "Other models".
+ * - Dynamically checks gem-menu-item[value="thinking_level"] availability and
+ *   switches Thinking level ("Low", "Medium", "High") on any model that supports it.
+ * - Handles both >=960px (under-input switcher + nested popover="manual" submenu)
+ *   and <=959px (top-header switcher + inline .expand-content accordion).
  */
 (function () {
   const POPOVER_HOST_ID = "gpt-gemini-popover-host";
   const TOAST_ID = "gpt-gemini-status-toast";
 
-  const MODEL_MATCHERS = {
-    1: /\bHydrogen\b/i,
-    6: /\bCarbon\b/i,
-    18: /\bArgon\b/i,
-    "flash-lite": /Flash-Lite/i,
-    "3.1-pro": /3\.1\s*Pro/i,
+  const { ELEMENTS } = window.GEMINI_PERIODIC_DATA;
+  const ELEMENT_ACCENTS = {
+    1: "blue",
+    6: "purple",
+    18: "teal",
   };
-
-  const ENGLISH_MODEL_NAMES = {
-    1: "Gemini 4 Hydrogen",
-    6: "Gemini 4 Carbon",
-    18: "Gemini 4 Argon",
-    "flash-lite": "3.5 Flash-Lite",
-    "3.1-pro": "3.1 Pro",
-  };
-
+  const FALLBACK_ACCENTS = ["blue", "purple", "teal"];
   const THINKING_KEYS = ["Low", "Medium", "High"];
 
   let isEnabled = true;
@@ -40,7 +32,11 @@
   let buttonObserver = null;
   let syncInterval = null;
   let automationQueue = Promise.resolve();
+  let hasProbedLiveMenu = false;
+
   let lastKnownLocked = [];
+  let lastKnownReleased = null;
+  let lastKnownOthers = null;
   let lastKnownThinkingOptions = [
     { key: "Low", label: "Low", locked: false },
     { key: "Medium", label: "Medium", locked: false },
@@ -82,11 +78,6 @@
     return rect.width > 0 && rect.height > 0;
   }
 
-  /**
-   * Finds the visible Gemini model switcher button across both responsive layouts:
-   * - >=960px: button[data-test-id="bard-mode-menu-button"] inside .input-area
-   * - <=959px: gem-button[data-test-id="bard-mode-menu-button"] > button in top header
-   */
   function findNativeModelButton() {
     const byTestId = document.querySelectorAll('[data-test-id="bard-mode-menu-button"]');
     for (const node of byTestId) {
@@ -106,6 +97,15 @@
     return null;
   }
 
+  function matchChemicalElement(text) {
+    if (!text) return null;
+    for (const el of ELEMENTS) {
+      const re = new RegExp(`\\b${el.name}\\b`, "i");
+      if (re.test(text)) return el;
+    }
+    return null;
+  }
+
   function mapPureLabelToThinkingKey(label) {
     if (!label) return null;
     const t = label.trim();
@@ -116,10 +116,10 @@
   }
 
   /**
-   * Reads both active model and active thinking level directly from Gemini's live button DOM.
+   * Reads active model (element OR non-element) and active thinking level from the live button DOM.
    */
   function parseActiveStateFromButton(btn) {
-    if (!btn) return { modelKey: null, thinkingLevel: null, rawText: "" };
+    if (!btn) return { modelKey: null, thinkingLevel: null, rawText: "", displayName: "" };
 
     const host = btn.closest('[data-test-id="bard-mode-menu-button"]') || btn;
     const ariaLabel =
@@ -141,18 +141,49 @@
     const combined = `${visibleText} ${ariaLabel}`;
 
     let modelKey = null;
-    if (MODEL_MATCHERS[1].test(combined)) modelKey = 1;
-    else if (MODEL_MATCHERS[6].test(combined)) modelKey = 6;
-    else if (MODEL_MATCHERS[18].test(combined)) modelKey = 18;
-    else if (MODEL_MATCHERS["flash-lite"].test(combined)) modelKey = "flash-lite";
-    else if (MODEL_MATCHERS["3.1-pro"].test(combined)) modelKey = "3.1-pro";
+    let displayName = visibleText;
 
-    const remainder = combined
+    // 1. Check against all 118 chemical elements dynamically
+    const matchedEl = matchChemicalElement(combined);
+    if (matchedEl) {
+      modelKey = matchedEl.number;
+      displayName = matchedEl.name;
+    } else if (lastKnownOthers && lastKnownOthers.length > 0) {
+      // 2. Check against dynamically discovered "Other models"
+      for (const other of lastKnownOthers) {
+        const cleanOther = other.name.replace(/^[\d.]+\s*/, "").trim();
+        if (
+          combined.toLowerCase().includes(other.name.toLowerCase()) ||
+          (cleanOther && combined.toLowerCase().includes(cleanOther.toLowerCase()))
+        ) {
+          modelKey = other.id;
+          displayName = other.name;
+          break;
+        }
+      }
+    }
+
+    // 3. Fallback if menu hasn't been probed yet on page load
+    if (modelKey === null) {
+      if (/Flash-Lite/i.test(combined)) {
+        modelKey = "flash-lite";
+        displayName = "Flash-Lite";
+      } else if (/3\.1\s*Pro|\bPro\b/i.test(combined)) {
+        modelKey = "3.1-pro";
+        displayName = "3.1 Pro";
+      }
+    }
+
+    // Isolate thinking-level suffix (e.g., "Hydrogen 中" -> "中", "Hydrogen High" -> "High")
+    let remainder = combined
       .replace(
-        /打开模式选择器|当前模式为|Open mode picker|current mode is|Gemini|Hydrogen|Argon|Carbon|Flash-Lite|Pro|3\.5|3\.1|4|[“”"'，,。.\s]/gi,
+        /打开模式选择器|当前模式为|Open mode picker|current mode is|Gemini|Flash-Lite|Pro|3\.5|3\.1|4|[“”"'，,。.\s]/gi,
         " "
-      )
-      .trim();
+      );
+    if (matchedEl) {
+      remainder = remainder.replace(new RegExp(`\\b${matchedEl.name}\\b`, "gi"), " ");
+    }
+    remainder = remainder.trim();
 
     let thinkingLevel = null;
     if (/\bHigh\b|高/i.test(remainder)) {
@@ -161,19 +192,17 @@
       thinkingLevel = "Medium";
     } else if (/\bLow\b|低/i.test(remainder)) {
       thinkingLevel = "Low";
-    } else if (modelKey === 1 || modelKey === 6 || modelKey === 18) {
-      // Gemini omits the suffix on the button when the default Low ("低") level is active
-      thinkingLevel = "Low";
+    } else if (typeof modelKey === "number") {
+      // Gemini omits the suffix when default Low ("低") is active on thinking-capable models
+      const meta = lastKnownReleased && lastKnownReleased[modelKey];
+      if (!meta || meta.supportsThinking !== false) {
+        thinkingLevel = "Low";
+      }
     }
 
-    return { modelKey, thinkingLevel, rawText: visibleText };
+    return { modelKey, thinkingLevel, rawText: visibleText, displayName };
   }
 
-  /**
-   * Responsively positions and scales the Periodic Table popover so it:
-   * 1. Never overlaps the prompt input bar (.input-area / .text-input-field)
-   * 2. Never overflows or clips against any edge of the viewport (even at narrow/short sizes)
-   */
   function positionPopoverHost() {
     if (!popoverHost) return;
     const card = popoverHost.querySelector(".gpt-popover-card");
@@ -288,23 +317,87 @@
     return false;
   }
 
-  function readMainMenuMetadata(rootMenu) {
+  /**
+   * Dynamically discovers EVERY model currently listed in Gemini's live menu DOM.
+   * Zero hardcoded model names: if Google adds/renames models, they appear automatically.
+   */
+  function discoverModelsFromMenu(rootMenu) {
     const items = getModelItemsFromMenu(rootMenu);
+    const discoveredReleased = {};
+    const discoveredOthers = [];
     const lockedModels = [];
+    let checkedKey = null;
+    let elementColorIdx = 0;
 
-    for (const num of [1, 6, 18]) {
-      const matcher = MODEL_MATCHERS[num];
-      const item = items.find((el) => {
-        const sub = (el.querySelector(".sublabel")?.textContent || "").trim();
-        const full = (el.textContent || "").trim();
-        return matcher.test(sub) || matcher.test(full);
-      });
-      if (item && isItemLocked(item)) {
-        lockedModels.push(num);
+    items.forEach((item) => {
+      const label = (item.querySelector(".label")?.textContent || "").trim();
+      const sublabel = (item.querySelector(".sublabel")?.textContent || "").trim();
+      const modeId = item.getAttribute("data-mode-id") || "";
+      const fullText = `${sublabel} ${label}`.trim();
+      const locked = isItemLocked(item);
+      const checked =
+        item.getAttribute("aria-checked") === "true" ||
+        item.classList.contains("selected");
+
+      const matchedEl = matchChemicalElement(sublabel) || matchChemicalElement(fullText);
+
+      if (matchedEl) {
+        const accent =
+          ELEMENT_ACCENTS[matchedEl.number] ||
+          FALLBACK_ACCENTS[elementColorIdx % FALLBACK_ACCENTS.length];
+        elementColorIdx += 1;
+
+        discoveredReleased[matchedEl.number] = {
+          number: matchedEl.number,
+          symbol: matchedEl.symbol,
+          name: matchedEl.name,
+          title: sublabel || matchedEl.name,
+          subtitle: label || "",
+          accent,
+          modeId,
+          defaultThinking: "Low",
+          supportsThinking: true,
+        };
+        if (locked) lockedModels.push(matchedEl.number);
+        if (checked) checkedKey = matchedEl.number;
+      } else {
+        const id = modeId || sublabel.toLowerCase().replace(/[^a-z0-9]+/g, "-") || label;
+        const name = sublabel || label || "Model";
+        discoveredOthers.push({
+          id,
+          name,
+          subtitle: label || "",
+          modeId,
+          supportsThinking: !/flash-lite/i.test(name),
+        });
+        if (locked) lockedModels.push(id);
+        if (checked) checkedKey = id;
+      }
+    });
+
+    // Also detect whether the currently active model has Thinking level enabled in this menu
+    const thinkingTrigger = rootMenu.querySelector('gem-menu-item[value="thinking_level"]');
+    const currentSupportsThinking = Boolean(
+      thinkingTrigger && !isItemLocked(thinkingTrigger) && isElementVisible(thinkingTrigger)
+    );
+
+    if (checkedKey !== null) {
+      if (typeof checkedKey === "number" && discoveredReleased[checkedKey]) {
+        discoveredReleased[checkedKey].supportsThinking = currentSupportsThinking;
+      } else if (typeof checkedKey === "string") {
+        const other = discoveredOthers.find((o) => o.id === checkedKey);
+        if (other) other.supportsThinking = currentSupportsThinking;
       }
     }
 
-    return { lockedModels, items };
+    return {
+      items,
+      discoveredReleased,
+      discoveredOthers,
+      lockedModels,
+      checkedKey,
+      currentSupportsThinking,
+    };
   }
 
   async function closeNativeMenu() {
@@ -324,12 +417,8 @@
         cancelable: true,
       });
 
-    if (rootMenu) {
-      rootMenu.dispatchEvent(escEvent());
-    }
-    if (document.activeElement) {
-      document.activeElement.dispatchEvent(escEvent());
-    }
+    if (rootMenu) rootMenu.dispatchEvent(escEvent());
+    if (document.activeElement) document.activeElement.dispatchEvent(escEvent());
     document.dispatchEvent(escEvent());
     window.dispatchEvent(escEvent());
     await sleep(35);
@@ -352,17 +441,10 @@
     return waitFor(() => getRootGemMenu(), 650, 20);
   }
 
-  /**
-   * Opens the "Thinking level" (thinking_level) options across both responsive breakpoints:
-   * - Mobile / Narrow (<=959px): gem-menu-item[value="thinking_level"].expandable -> click()
-   *   expands inline .expand-content > gem-menu-item[role="menuitemradio"]
-   * - Desktop (>=960px): gem-menu-item[value="thinking_level"][aria-haspopup="true"] ->
-   *   mouseenter / ArrowRight opens nested .submenu-container > gem-menu > gem-menu-item[role="menuitemradio"]
-   */
   async function openAndGetThinkingItems(rootMenu) {
     if (!rootMenu) return [];
     const trigger = rootMenu.querySelector('gem-menu-item[value="thinking_level"]');
-    if (!trigger || isItemLocked(trigger)) return [];
+    if (!trigger || isItemLocked(trigger) || !isElementVisible(trigger)) return [];
 
     const isMobileExpandable =
       trigger.classList.contains("expandable") ||
@@ -442,10 +524,6 @@
     return items || [];
   }
 
-  /**
-   * Reads the thinking level items strictly by their .label ("Low"/"Medium"/"High" or "低"/"中"/"高"),
-   * while keeping button display labels in clean English ("Low", "Medium", "High").
-   */
   function parseThinkingItems(rawItems) {
     const options = [];
     const itemsByKey = {};
@@ -471,7 +549,7 @@
 
       options.push({
         key,
-        label: key, // Always keep English label ("Low", "Medium", "High")
+        label: key,
         locked,
       });
       itemsByKey[key] = {
@@ -501,6 +579,87 @@
     return automationQueue;
   }
 
+  function findTargetItemInMenu(items, targetModelKey) {
+    if (typeof targetModelKey === "number") {
+      const meta = lastKnownReleased && lastKnownReleased[targetModelKey];
+      if (meta && meta.modeId) {
+        const byMode = items.find(
+          (el) => el.getAttribute("data-mode-id") === meta.modeId
+        );
+        if (byMode) return byMode;
+      }
+      const elObj = ELEMENTS.find((e) => e.number === targetModelKey);
+      if (elObj) {
+        const re = new RegExp(`\\b${elObj.name}\\b`, "i");
+        return items.find((el) => re.test(el.textContent || ""));
+      }
+      return null;
+    }
+
+    const otherMeta =
+      lastKnownOthers && lastKnownOthers.find((o) => o.id === targetModelKey);
+    if (otherMeta && otherMeta.modeId) {
+      const byMode = items.find(
+        (el) => el.getAttribute("data-mode-id") === otherMeta.modeId
+      );
+      if (byMode) return byMode;
+    }
+    if (otherMeta && otherMeta.name) {
+      return items.find((el) =>
+        (el.textContent || "").toLowerCase().includes(otherMeta.name.toLowerCase())
+      );
+    }
+    if (targetModelKey === "flash-lite") {
+      return items.find((el) => /Flash-Lite/i.test(el.textContent || ""));
+    }
+    if (targetModelKey === "3.1-pro") {
+      return items.find((el) => /3\.1\s*Pro/i.test(el.textContent || ""));
+    }
+    return null;
+  }
+
+  /**
+   * Probes live Gemini menu once when opening Periodic Table so models & locks
+   * reflect the user's real Gemini account and any newly released Google models.
+   */
+  async function probeLiveModelsOnce() {
+    if (hasProbedLiveMenu) return;
+    hasProbedLiveMenu = true;
+    return enqueueAutomation(async () => {
+      const btn = findNativeModelButton();
+      if (!btn) return;
+      const rootMenu = await openNativeMenu(btn);
+      if (!rootMenu) return;
+
+      const discovered = discoverModelsFromMenu(rootMenu);
+      lastKnownReleased = discovered.discoveredReleased;
+      lastKnownOthers = discovered.discoveredOthers;
+      lastKnownLocked = discovered.lockedModels;
+
+      let checkedThinking = null;
+      if (discovered.currentSupportsThinking) {
+        const rawThinking = await openAndGetThinkingItems(rootMenu);
+        if (rawThinking.length > 0) {
+          const parsed = parseThinkingItems(rawThinking);
+          if (parsed.options.length > 0) lastKnownThinkingOptions = parsed.options;
+          checkedThinking = parsed.activeKey;
+        }
+      }
+
+      const actual = parseActiveStateFromButton(findNativeModelButton());
+      periodicTable?.syncExternalState({
+        modelKey: discovered.checkedKey ?? actual.modelKey,
+        thinkingLevel: discovered.currentSupportsThinking
+          ? actual.thinkingLevel || checkedThinking
+          : null,
+        lockedModels: lastKnownLocked,
+        discoveredReleased: lastKnownReleased,
+        discoveredOthers: lastKnownOthers,
+        thinkingOptions: lastKnownThinkingOptions,
+      });
+    });
+  }
+
   async function switchRealGeminiModel(targetModelKey, targetThinkingLevel) {
     return enqueueAutomation(async () => {
       const btn = findNativeModelButton();
@@ -516,28 +675,27 @@
         return;
       }
 
-      const { lockedModels, items } = readMainMenuMetadata(rootMenu);
-      lastKnownLocked = lockedModels;
+      const discovered = discoverModelsFromMenu(rootMenu);
+      lastKnownReleased = discovered.discoveredReleased;
+      lastKnownOthers = discovered.discoveredOthers;
+      lastKnownLocked = discovered.lockedModels;
 
-      if (periodicTable) {
-        periodicTable.syncExternalState({
-          lockedModels: lastKnownLocked,
-        });
-      }
+      periodicTable?.syncExternalState({
+        lockedModels: lastKnownLocked,
+        discoveredReleased: lastKnownReleased,
+        discoveredOthers: lastKnownOthers,
+      });
 
-      // 1. Switch model if target model differs from current model
-      if (targetModelKey !== null && targetModelKey !== initialBtnState.modelKey) {
-        const matcher = MODEL_MATCHERS[targetModelKey];
-        const targetItem = items.find((el) => {
-          const sub = (el.querySelector(".sublabel")?.textContent || "").trim();
-          const full = (el.textContent || "").trim();
-          return matcher && (matcher.test(sub) || matcher.test(full));
-        });
+      const currentLiveKey = discovered.checkedKey ?? initialBtnState.modelKey;
+
+      // 1. Switch model if target differs from currently active model
+      if (targetModelKey !== null && targetModelKey !== currentLiveKey) {
+        const targetItem = findTargetItemInMenu(discovered.items, targetModelKey);
 
         if (!targetItem) {
           showToast("Model not found in Gemini menu");
           periodicTable?.syncExternalState({
-            modelKey: initialBtnState.modelKey,
+            modelKey: currentLiveKey,
             thinkingLevel: initialBtnState.thinkingLevel,
             lockedModels: lastKnownLocked,
           });
@@ -545,10 +703,10 @@
         }
 
         if (isItemLocked(targetItem)) {
-          const modelTitle = ENGLISH_MODEL_NAMES[targetModelKey] || "Selected model";
-          showToast(`${modelTitle} is locked on your current plan`);
+          const title = (targetItem.querySelector(".sublabel")?.textContent || "").trim();
+          showToast(`${title || "Selected model"} is locked on your current plan`);
           periodicTable?.syncExternalState({
-            modelKey: initialBtnState.modelKey,
+            modelKey: currentLiveKey,
             thinkingLevel: initialBtnState.thinkingLevel,
             lockedModels: lastKnownLocked,
           });
@@ -567,81 +725,95 @@
         await sleep(60);
       }
 
-      // 2. Switch Thinking level if requested, or read real options/active level after model change
+      // 2. Inspect or switch Thinking level on ANY model that Gemini allows
       let thinkingBlockedReason = null;
       let checkedThinkingFromMenu = null;
-      const switchedToReleasedModel =
-        targetModelKey !== null &&
-        targetModelKey !== initialBtnState.modelKey &&
-        (targetModelKey === 1 || targetModelKey === 6 || targetModelKey === 18);
+      let modelSupportsThinking = true;
 
-      if (
-        (targetThinkingLevel &&
-          (targetModelKey === 1 || targetModelKey === 6 || targetModelKey === 18)) ||
-        switchedToReleasedModel
-      ) {
+      if (targetThinkingLevel || targetModelKey !== currentLiveKey) {
         const refreshedBtn = findNativeModelButton();
         rootMenu = await openNativeMenu(refreshedBtn);
         if (rootMenu) {
-          const rawThinkingItems = await openAndGetThinkingItems(rootMenu);
-          if (rawThinkingItems.length === 0) {
+          const refreshedDiscovery = discoverModelsFromMenu(rootMenu);
+          lastKnownReleased = refreshedDiscovery.discoveredReleased;
+          lastKnownOthers = refreshedDiscovery.discoveredOthers;
+          modelSupportsThinking = refreshedDiscovery.currentSupportsThinking;
+
+          if (!modelSupportsThinking) {
             if (targetThinkingLevel) {
-              thinkingBlockedReason = "Thinking level options unavailable";
+              thinkingBlockedReason = "Thinking level is not adjustable for this model";
             }
           } else {
-            const parsed = parseThinkingItems(rawThinkingItems);
-            if (parsed.options.length > 0) {
-              lastKnownThinkingOptions = parsed.options;
-            }
-            checkedThinkingFromMenu = parsed.activeKey;
+            const rawThinkingItems = await openAndGetThinkingItems(rootMenu);
+            if (rawThinkingItems.length === 0) {
+              if (targetThinkingLevel) {
+                thinkingBlockedReason = "Thinking level options unavailable";
+              }
+            } else {
+              const parsed = parseThinkingItems(rawThinkingItems);
+              if (parsed.options.length > 0) {
+                lastKnownThinkingOptions = parsed.options;
+              }
+              checkedThinkingFromMenu = parsed.activeKey;
 
-            if (targetThinkingLevel) {
-              const subTarget = parsed.itemsByKey[targetThinkingLevel];
-              if (!subTarget) {
-                thinkingBlockedReason = `Thinking level ${targetThinkingLevel} not found`;
-              } else if (subTarget.locked) {
-                thinkingBlockedReason = `Thinking level ${targetThinkingLevel} is locked`;
-              } else {
-                subTarget.el.click();
-                await waitFor(
-                  () =>
-                    !getRootGemMenu() ||
-                    parseActiveStateFromButton(findNativeModelButton()).thinkingLevel ===
-                      targetThinkingLevel,
-                  600,
-                  20
-                );
-                await sleep(50);
+              if (targetThinkingLevel) {
+                const subTarget = parsed.itemsByKey[targetThinkingLevel];
+                if (!subTarget) {
+                  thinkingBlockedReason = `Thinking level ${targetThinkingLevel} not found`;
+                } else if (subTarget.locked) {
+                  thinkingBlockedReason = `Thinking level ${targetThinkingLevel} is locked`;
+                } else {
+                  subTarget.el.click();
+                  await waitFor(
+                    () =>
+                      !getRootGemMenu() ||
+                      parseActiveStateFromButton(findNativeModelButton()).thinkingLevel ===
+                        targetThinkingLevel,
+                    600,
+                    20
+                  );
+                  await sleep(50);
+                }
               }
             }
           }
         }
       }
 
-      // 3. Close any remaining native menu and read back actual state from the button
+      // 3. Close any remaining native menu and read back actual state
       await closeNativeMenu();
       const actual = parseActiveStateFromButton(findNativeModelButton());
-      const resolvedThinking = actual.thinkingLevel || checkedThinkingFromMenu || null;
+      const resolvedThinking = modelSupportsThinking
+        ? actual.thinkingLevel || checkedThinkingFromMenu || null
+        : null;
 
-      if (periodicTable) {
-        periodicTable.syncExternalState({
-          modelKey: actual.modelKey,
-          thinkingLevel: resolvedThinking,
-          lockedModels: lastKnownLocked,
-          thinkingOptions: lastKnownThinkingOptions,
-        });
-      }
+      periodicTable?.syncExternalState({
+        modelKey: actual.modelKey,
+        thinkingLevel: resolvedThinking,
+        lockedModels: lastKnownLocked,
+        discoveredReleased: lastKnownReleased,
+        discoveredOthers: lastKnownOthers,
+        thinkingOptions: lastKnownThinkingOptions,
+      });
 
-      const displayModel =
-        ENGLISH_MODEL_NAMES[actual.modelKey] || actual.rawText || "Gemini";
+      const resolvedModelName =
+        (typeof actual.modelKey === "number" &&
+          lastKnownReleased &&
+          lastKnownReleased[actual.modelKey]?.title) ||
+        (typeof actual.modelKey === "string" &&
+          lastKnownOthers &&
+          lastKnownOthers.find((o) => o.id === actual.modelKey)?.name) ||
+        actual.displayName ||
+        actual.rawText ||
+        "Gemini";
 
       if (thinkingBlockedReason) {
-        showToast(`${displayModel} — ${thinkingBlockedReason}`);
+        showToast(`${resolvedModelName} — ${thinkingBlockedReason}`);
       } else {
         const thinkingSuffix = resolvedThinking
           ? ` · Thinking: ${resolvedThinking}`
           : "";
-        showToast(`Switched to ${displayModel}${thinkingSuffix}`);
+        showToast(`Switched to ${resolvedModelName}${thinkingSuffix}`);
       }
     });
   }
@@ -678,22 +850,31 @@
             modelKey: actual.modelKey,
             thinkingLevel: actual.thinkingLevel,
             lockedModels: lastKnownLocked,
+            discoveredReleased: lastKnownReleased,
+            discoveredOthers: lastKnownOthers,
             thinkingOptions: lastKnownThinkingOptions,
           });
           positionPopoverHost();
           requestAnimationFrame(() => positionPopoverHost());
+          if (!hasProbedLiveMenu) {
+            setTimeout(() => {
+              if (periodicTable && periodicTable.isOpen) {
+                probeLiveModelsOnce();
+              }
+            }, 35);
+          }
         }
       },
       onSelectModel: ({ type, element, otherModel, thinkingLevel }) => {
         if (type === "other" && otherModel) {
-          switchRealGeminiModel(otherModel.id, null);
+          switchRealGeminiModel(otherModel.id, thinkingLevel);
           return;
         }
         if (type === "element" && element) {
           if (!element.released) {
             const actual = parseActiveStateFromButton(findNativeModelButton());
             showToast(`${element.name} (${element.symbol}) is coming soon`);
-            if (actual.modelKey) {
+            if (actual.modelKey !== null) {
               setTimeout(() => {
                 periodicTable?.syncExternalState({
                   modelKey: actual.modelKey,
@@ -706,8 +887,10 @@
           switchRealGeminiModel(element.number, thinkingLevel);
         }
       },
-      onSelectThinking: ({ element, thinkingLevel }) => {
-        if (element && element.released) {
+      onSelectThinking: ({ element, otherModel, thinkingLevel }) => {
+        if (otherModel) {
+          switchRealGeminiModel(otherModel.id, thinkingLevel);
+        } else if (element && element.released) {
           switchRealGeminiModel(element.number, thinkingLevel);
         }
       },
@@ -727,7 +910,7 @@
     if (!btn) return;
 
     const actual = parseActiveStateFromButton(btn);
-    if (actual.modelKey && periodicTable) {
+    if (actual.modelKey !== null && periodicTable) {
       periodicTable.syncExternalState({
         modelKey: actual.modelKey,
         thinkingLevel: actual.thinkingLevel,
@@ -739,7 +922,7 @@
       if (window.__gptInternalAutomation) return;
       const curBtn = findNativeModelButton();
       const st = parseActiveStateFromButton(curBtn);
-      if (st.modelKey && periodicTable) {
+      if (st.modelKey !== null && periodicTable) {
         periodicTable.syncExternalState({
           modelKey: st.modelKey,
           thinkingLevel: st.thinkingLevel,

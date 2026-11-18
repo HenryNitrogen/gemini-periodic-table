@@ -93,9 +93,10 @@ export default function SupportPage() {
                 Why are 115 elements marked &quot;Coming soon&quot;?
               </h3>
               <p>
-                Only 3 Gemini 4 element models (Hydrogen, Carbon, and Argon) are
-                currently released. The remaining 115 elements are interactive
-                placeholders completing the 118-element Periodic Table layout.
+                Element models that Gemini has actually released light up
+                automatically on the Periodic Table. Any unannounced elements
+                remain interactive &quot;Coming soon&quot; placeholders across
+                the 118-element grid.
               </p>
             </div>
 
