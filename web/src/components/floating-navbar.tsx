@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Download } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function GitHubMark({ className = "h-3.5 w-3.5" }: { className?: string }) {
@@ -84,12 +84,13 @@ export function FloatingNavbar() {
             <span>GitHub</span>
           </a>
           <a
-            href="/periodic-table-for-gemini.zip"
-            download
-            className="inline-flex items-center gap-1.5 rounded-full bg-zinc-950 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 transition-all"
+            href="https://chromewebstore.google.com/detail/periodic-table-for-gemini/akmnlllibcniifmopljohofbjkecggcm"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full bg-zinc-950 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 transition-all"
           >
-            <Download className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Download</span>
+            <span>Add to Chrome</span>
+            <ArrowUpRight className="h-3.5 w-3.5 text-zinc-300 hidden sm:inline" />
           </a>
         </div>
       </header>

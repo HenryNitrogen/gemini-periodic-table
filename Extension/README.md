@@ -14,7 +14,12 @@ An interactive **118-element Periodic Table** model selector Chrome extension fo
 - **Standalone Fullscreen Replica (`demo.html`)**:
   - Includes a standalone interactive demo replicating the original concept video.
 
-## Installation (Unpacked)
+## Installation
+
+### Chrome Web Store (Recommended)
+Install directly from the **[Chrome Web Store](https://chromewebstore.google.com/detail/periodic-table-for-gemini/akmnlllibcniifmopljohofbjkecggcm)**.
+
+### Unpacked (From Source)
 
 1. Open `chrome://extensions/` in Chrome, Arc, Edge, or Brave.
 2. Enable **Developer mode** in the top-right corner.

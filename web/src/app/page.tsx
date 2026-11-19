@@ -40,6 +40,8 @@ function GitHubMark({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 const REPO_URL = "https://github.com/HenryNitrogen/gemini-periodic-table";
+const CHROME_STORE_URL =
+  "https://chromewebstore.google.com/detail/periodic-table-for-gemini/akmnlllibcniifmopljohofbjkecggcm";
 
 const SOURCE_FILES = [
   {
@@ -176,12 +178,13 @@ export default function HomePage() {
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3.5">
             <a
-              href="/periodic-table-for-gemini.zip"
-              download
+              href={CHROME_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex h-12 items-center gap-2.5 rounded-full bg-zinc-950 px-7 text-sm font-medium text-white hover:bg-zinc-800 transition-all shadow-sm"
             >
-              <Download className="h-4 w-4" />
-              <span>Download Extension (.zip)</span>
+              <span>Add to Chrome — Free</span>
+              <ArrowUpRight className="h-4 w-4 text-zinc-300" />
             </a>
 
             <a
@@ -193,6 +196,17 @@ export default function HomePage() {
               <GitHubMark className="h-4 w-4" />
               <span>View Source on GitHub</span>
               <ArrowUpRight className="h-3.5 w-3.5 text-zinc-400" />
+            </a>
+          </div>
+
+          <div className="mt-4">
+            <a
+              href="/periodic-table-for-gemini.zip"
+              download
+              className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-950 transition-colors underline underline-offset-4"
+            >
+              <Download className="h-3 w-3" />
+              <span>Or download unpacked .zip manually</span>
             </a>
           </div>
 
@@ -549,14 +563,35 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border-zinc-950/20">
+              <CardHeader>
+                <div className="font-mono text-xs font-semibold text-zinc-950">
+                  RECOMMENDED · CHROME WEB STORE
+                </div>
+                <CardTitle className="mt-1">1-Click Install</CardTitle>
+                <CardDescription>
+                  Install directly from the official{" "}
+                  <a
+                    href={CHROME_STORE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-950 underline underline-offset-4 font-medium"
+                  >
+                    Chrome Web Store
+                  </a>{" "}
+                  listing with automatic updates enabled.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
             <Card>
               <CardHeader>
                 <div className="font-mono text-xs font-semibold text-zinc-400">
-                  STEP 01
+                  MANUAL · UNPACKED
                 </div>
                 <CardTitle className="mt-1">Download or Clone</CardTitle>
                 <CardDescription>
-                  Download{" "}
+                  Prefer loading from source? Download{" "}
                   <a
                     href="/periodic-table-for-gemini.zip"
                     download
@@ -564,9 +599,8 @@ export default function HomePage() {
                   >
                     periodic-table-for-gemini.zip
                   </a>{" "}
-                  and unzip it, or clone the repository from GitHub and locate
-                  the <code className="font-mono text-xs text-zinc-800">Extension/</code>{" "}
-                  directory.
+                  or clone <code className="font-mono text-xs text-zinc-800">Extension/</code>{" "}
+                  and load unpacked in <code className="font-mono text-xs text-zinc-800">chrome://extensions/</code>.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -574,22 +608,7 @@ export default function HomePage() {
             <Card>
               <CardHeader>
                 <div className="font-mono text-xs font-semibold text-zinc-400">
-                  STEP 02
-                </div>
-                <CardTitle className="mt-1">Load Unpacked in Chrome</CardTitle>
-                <CardDescription>
-                  Open <code className="font-mono text-xs text-zinc-800">chrome://extensions/</code>,
-                  toggle on <strong>Developer mode</strong> in the top-right
-                  corner, and click <strong>Load unpacked</strong> to select the{" "}
-                  <code className="font-mono text-xs text-zinc-800">Extension/</code> folder.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="font-mono text-xs font-semibold text-zinc-400">
-                  STEP 03
+                  READY · START USING
                 </div>
                 <CardTitle className="mt-1">Open Google Gemini</CardTitle>
                 <CardDescription>

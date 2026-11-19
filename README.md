@@ -1,5 +1,7 @@
 # Periodic Table for Gemini
 
+[![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Install_Extension-black?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/periodic-table-for-gemini/akmnlllibcniifmopljohofbjkecggcm)
+[![Website](https://img.shields.io/badge/Website-ptable.coldestwins.com-black)](https://ptable.coldestwins.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](https://opensource.org/licenses/MIT)
 [![Manifest V3](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-black)](./Extension)
 [![Next.js](https://img.shields.io/badge/Web-Next.js_%2B_shadcn%2Fui-black)](./web)
@@ -46,7 +48,11 @@ gemini-periodic-table/
 
 ## Quick Start
 
-### 1. Load the Chrome Extension (`Extension/`)
+### Option 1: Install from Chrome Web Store (Recommended)
+
+👉 **[Install Periodic Table for Gemini on Chrome Web Store](https://chromewebstore.google.com/detail/periodic-table-for-gemini/akmnlllibcniifmopljohofbjkecggcm)**
+
+### Option 2: Load Unpacked from Source (`Extension/`)
 
 ```bash
 git clone https://github.com/HenryNitrogen/gemini-periodic-table.git

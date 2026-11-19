@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 const REPO_URL = "https://github.com/HenryNitrogen/gemini-periodic-table";
+const CHROME_STORE_URL =
+  "https://chromewebstore.google.com/detail/periodic-table-for-gemini/akmnlllibcniifmopljohofbjkecggcm";
 
 export function SiteFooter() {
   return (
@@ -24,6 +26,14 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-6">
+          <a
+            href={CHROME_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-zinc-950 hover:underline underline-offset-4"
+          >
+            Chrome Web Store
+          </a>
           <Link href="/privacy" className="hover:text-zinc-950 transition-colors">
             Privacy Policy
           </Link>
